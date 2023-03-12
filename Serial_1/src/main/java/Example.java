@@ -1,12 +1,12 @@
-import java.lang.reflect.*;
-
 public class Example {
     public int id;
-    private String name;
+    public String firstName;
+    public String lastName;
 
     public Example() {
         id = 1;
-        name = "Aline";
+        firstName = "Aline";
+        lastName = "Grace";
     }
 }
 
