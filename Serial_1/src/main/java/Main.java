@@ -1,60 +1,76 @@
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
+import javax.json.Json;
+import javax.json.JsonObjectBuilder;
+import javax.json.JsonValue;
 import java.lang.reflect.Field;
 
-import static java.lang.System.out;
+
 
 public class Main {
     public static void main(String[] args) throws ClassNotFoundException, IllegalAccessException, JsonProcessingException {
-
-//   сверху будет класс, который вызывает пользователь
-//   и передает имя класса + объект, который нужно сериализовать
-// объектная модель (парсинг)
+        // объект, который мы передаем для десериализации
         Example e = new Example();
-        Class<?>  clazz = Class.forName(args[0]);
+        // я хотела передавать и название класса функции, но оно не хочет так тоже работать(
+        JsonValue jsString = serializeObject(e);
+        System.out.println(jsString.toString());
+
+    }
+    private static JsonValue serializeObject(Object o) throws IllegalAccessException {
+        if (o == null) {
+            return JsonValue.NULL;
+        }
+        Class <?> clazz = o.getClass();
+        String className = clazz.getName();
         Field[] fields = clazz.getDeclaredFields();
+        JsonObjectBuilder jsObj = Json.createObjectBuilder();
+        jsObj.add("className", className);
+        if (fields != null){
+            JsonObjectBuilder jsInnerObj = Json.createObjectBuilder();
+            for (Field field : fields) {
+                field.setAccessible(true);
+                String fieldName = field.getName();
+//                if(isPrimitive(field.getType()){
+                    if(field.get(o) != null){
+                        jsInnerObj.add(fieldName, field.get(o).toString());
+                }
+                    else {
+                        jsInnerObj.add(fieldName,JsonValue.NULL);
+                }
+//                }
+            }
+            jsObj.add("fields", jsInnerObj);
+        }
+        return jsObj.build();
+    }
+//    private static boolean isPrimitive(Class<?> cls) {
+//        return cls.isPrimitive() || cls.equals(Integer.class) ||
+//                cls.equals(String.class) || cls.equals(Double.class) ||
+//                cls.equals(Boolean.class) || cls.equals(Byte.class) ||
+//                cls.equals(Short.class) || cls.equals(Long.class) ||
+//                cls.equals(Float.class);
+//    }
+
+}
+
+
+
+
+//        Class<?> clazz = Class.forName(args[0]);
+//        Field[] fields = clazz.getDeclaredFields();
 
 //        for (Field field : fields) {
 //            field.setAccessible(true);
-////            out.println(field.getName());
+//            out.println(field.getName());
 //        }
-//
-        ObjectMapper mapper = new ObjectMapper();
-        String empString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(e);
-        out.println(empString);
+//    }
 
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("{");
-        stringBuilder.append("\n");
-
-        for (int i = 0; i < fields.length; i++) {
-            fields[i].setAccessible(true);
-            Object value = fields[i].get(e);
-            stringBuilder.append("\t");
-            stringBuilder.append('"');
-            stringBuilder.append(fields[i].getName());
-            stringBuilder.append('"');
-            stringBuilder.append(" : ");
-            stringBuilder.append('"');
-            stringBuilder.append(value);
-            stringBuilder.append('"');
-            if (i != fields.length - 1) {
-                stringBuilder.append(",");
-            }
-
-            stringBuilder.append("\n");
-//            out.println(fields[i].getType());
-        }
-        stringBuilder.append("}");
-        out.println(stringBuilder.toString());
+//        ObjectMapper mapper = new ObjectMapper();
+//        String empString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(e);
+//        out.println(empString);
 
 
-
-
-
-
-        // для дерганья аннотаций (сырой, допишем)
+    // для дерганья аннотаций (сырой, допишем)
 
 //        out.format("Annotations:%n");
 //        Annotation[] ann = c.getAnnotations();
@@ -67,22 +83,24 @@ public class Main {
 //        }
 
 
-
 //        Example e = new Example();
 //        serialize(Example.class, e);
-    }
-
-//    private static void serialize(Class<?> clazz, Object o) throws IllegalAccessException {
-//        Field[] fields = clazz.getDeclaredFields();
-//        for (Field field : fields) {
-//            field.setAccessible(true);
-//            out.println(field.getName());
-        }
-
-//        for (Field f : fields) {
-//            Object value = f.get(o);
-//            out.println(value);
-//        }
 //    }
 
-//}
+//    private static String serialize(Class<?> clazz, Object o) throws IllegalAccessException {
+////        Field[] fields = clazz.getDeclaredFields();
+////        for (Field field : fields) {
+////            field.setAccessible(true);
+//////            out.println(field.getName());
+////        }
+////
+////        for (Field f : fields) {
+////            Object value = f.get(o);
+//////            out.println(value);
+////        }
+//
+//        return (serializeObject(o).toString());
+//    }
+
+
+
