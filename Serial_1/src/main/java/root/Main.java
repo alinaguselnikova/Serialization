@@ -1,4 +1,7 @@
+package root;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
+import root.Example;
 
 import javax.json.Json;
 import javax.json.JsonObjectBuilder;
@@ -83,8 +86,8 @@ public class Main {
 //        }
 
 
-//        Example e = new Example();
-//        serialize(Example.class, e);
+//        root.Example e = new root.Example();
+//        serialize(root.Example.class, e);
 //    }
 
 //    private static String serialize(Class<?> clazz, Object o) throws IllegalAccessException {

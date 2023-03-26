@@ -1,3 +1,5 @@
+package root;
+
 public class Example {
     public int id;
     public String firstName;
