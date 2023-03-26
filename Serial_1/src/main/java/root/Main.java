@@ -1,109 +1,92 @@
-package root;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
-import root.Example;
 
-import javax.json.Json;
-import javax.json.JsonObjectBuilder;
-import javax.json.JsonValue;
+import javax.json.*;
 import java.lang.reflect.Field;
+import java.text.ParseException;
+import java.util.*;
 
 
 
 public class Main {
-    public static void main(String[] args) throws ClassNotFoundException, IllegalAccessException, JsonProcessingException {
-        // объект, который мы передаем для десериализации
+    public static void main(String[] args) throws ClassNotFoundException, IllegalAccessException, JsonProcessingException, ParseException {
         Example e = new Example();
         // я хотела передавать и название класса функции, но оно не хочет так тоже работать(
         JsonValue jsString = serializeObject(e);
         System.out.println(jsString.toString());
 
     }
+
     private static JsonValue serializeObject(Object o) throws IllegalAccessException {
         if (o == null) {
             return JsonValue.NULL;
         }
-        Class <?> clazz = o.getClass();
+        Class<?> clazz = o.getClass();
         String className = clazz.getName();
         Field[] fields = clazz.getDeclaredFields();
         JsonObjectBuilder jsObj = Json.createObjectBuilder();
         jsObj.add("className", className);
-        if (fields != null){
+        if (fields != null) {
             JsonObjectBuilder jsInnerObj = Json.createObjectBuilder();
             for (Field field : fields) {
                 field.setAccessible(true);
                 String fieldName = field.getName();
-//                if(isPrimitive(field.getType()){
-                    if(field.get(o) != null){
+                if (field.get(o) != null) {
+                    if (isString(field)) {
                         jsInnerObj.add(fieldName, field.get(o).toString());
+                    }
+                    if (isInt(field)) {
+                        jsInnerObj.add(fieldName, ((Number) field.get(o)).longValue());
+                    }
+                    if (isFloat(field)) {
+                        jsInnerObj.add(fieldName, ((Number) field.get(o)).doubleValue());
+                    }
+                    if (isBoolean(field)) {
+                        jsInnerObj.add(fieldName, ((Boolean) field.get(o)).booleanValue());
+                    }
+                } else {
+                    jsInnerObj.add(fieldName, JsonValue.NULL);
                 }
-                    else {
-                        jsInnerObj.add(fieldName,JsonValue.NULL);
-                }
-//                }
             }
             jsObj.add("fields", jsInnerObj);
         }
         return jsObj.build();
     }
-//    private static boolean isPrimitive(Class<?> cls) {
-//        return cls.isPrimitive() || cls.equals(Integer.class) ||
-//                cls.equals(String.class) || cls.equals(Double.class) ||
-//                cls.equals(Boolean.class) || cls.equals(Byte.class) ||
-//                cls.equals(Short.class) || cls.equals(Long.class) ||
-//                cls.equals(Float.class);
-//    }
 
+    private static boolean isString(Field field) throws IllegalAccessException {
+        return field.getType().equals(String.class) || field.getType().equals(char.class)
+                || field.getType().equals(Character.class);
+    }
+
+    private static boolean isInt(Field field) throws IllegalAccessException {
+        return field.getType().equals(int.class) || field.getType().equals(Integer.class)
+                || field.getType().equals(byte.class) || field.getType().equals(Byte.class)
+                || field.getType().equals(short.class) || field.getType().equals(Short.class)
+                || field.getType().equals(long.class) || field.getType().equals(Long.class);
+
+    }
+
+    private static boolean isFloat(Field field) throws IllegalAccessException {
+        return field.getType().equals(double.class) || field.getType().equals(Double.class)
+                || field.getType().equals(float.class) || field.getType().equals(Float.class);
+    }
+
+    private static boolean isBoolean(Field field) throws IllegalAccessException {
+        return field.getType().equals(boolean.class) || field.getType().equals(Boolean.class);
+    }
 }
 
-
-
-
-//        Class<?> clazz = Class.forName(args[0]);
-//        Field[] fields = clazz.getDeclaredFields();
-
-//        for (Field field : fields) {
-//            field.setAccessible(true);
-//            out.println(field.getName());
-//        }
-//    }
 
 //        ObjectMapper mapper = new ObjectMapper();
 //        String empString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(e);
 //        out.println(empString);
 
 
-    // для дерганья аннотаций (сырой, допишем)
-
-//        out.format("Annotations:%n");
-//        Annotation[] ann = c.getAnnotations();
-//        if (ann.length != 0) {
-//            for (Annotation a : ann)
-//                out.format("  %s%n", a.toString());
-//            out.format("%n");
-//        } else {
-//            out.format("  -- No Annotations --%n%n");
-//        }
-
-
-//        root.Example e = new root.Example();
-//        serialize(root.Example.class, e);
-//    }
-
-//    private static String serialize(Class<?> clazz, Object o) throws IllegalAccessException {
-////        Field[] fields = clazz.getDeclaredFields();
-////        for (Field field : fields) {
-////            field.setAccessible(true);
-//////            out.println(field.getName());
-////        }
 ////
 ////        for (Field f : fields) {
 ////            Object value = f.get(o);
 //////            out.println(value);
 ////        }
 //
-//        return (serializeObject(o).toString());
-//    }
 
 
 
