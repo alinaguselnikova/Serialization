@@ -2,30 +2,44 @@ package serialization;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-
-import javax.json.*;
+import javax.json.Json;
+import javax.json.JsonObjectBuilder;
+import javax.json.JsonValue;
 import java.lang.reflect.Field;
 import java.text.ParseException;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Queue;
 
 
 public class Main {
     public static void main(String[] args) throws ClassNotFoundException, IllegalAccessException, JsonProcessingException, ParseException {
-        Example e = new Example();
+        Example e = new Example("Aline", 0);
+        Example p = new Example("Don", 200);
+        e.setRelation(p);
+        p.setRelation(e);
         System.out.println(startWorking(e));
-
     }
 
-    private static JsonValue startWorking(Object o) throws IllegalAccessException {
+    private static List<JsonValue> startWorking(Object o) throws IllegalAccessException {
         if ( o == null) {
             return null;
         }
+        ArrayDeque<Object> toSerialize = new ArrayDeque<>();
+        List<JsonValue> res = new ArrayList<>();
+        toSerialize.add(o);
         IdGiver IdExample = new IdGiver();
-        Integer currentId = IdExample.getIDFor(o);
-        JsonValue serializedObject = serializeObject(currentId, o);
-        return serializedObject;
+        while (!toSerialize.isEmpty()) {
+            Object obj = toSerialize.pop();
+            Integer currentId = IdExample.getIDFor(obj);
+            JsonValue serializedObject = serializeObject(currentId, obj, toSerialize, IdExample);
+            res.add(serializedObject);
+        }
+        return res;
     }
 
-    private static JsonValue serializeObject(Integer ID, Object o) throws IllegalAccessException {
+    private static JsonValue serializeObject(Integer ID, Object o, Queue<Object> serializationQueue, IdGiver giver) throws IllegalAccessException {
         if (o == null) {
             return JsonValue.NULL;
         }
@@ -35,28 +49,37 @@ public class Main {
         JsonObjectBuilder jsObj = Json.createObjectBuilder();
         jsObj.add("className", className);
         if (fields != null) {
-            JsonObjectBuilder jsInnerObj = Json.createObjectBuilder();
+            JsonObjectBuilder primitiveFields = Json.createObjectBuilder();
+            JsonObjectBuilder refFields = Json.createObjectBuilder();
             for (Field field : fields) {
                 field.setAccessible(true);
                 String fieldName = field.getName();
                 if (field.get(o) != null) {
                     if (isString(field)) {
-                        jsInnerObj.add(fieldName, field.get(o).toString());
+                        primitiveFields.add(fieldName, field.get(o).toString());
                     }
-                    if (isInt(field)) {
-                        jsInnerObj.add(fieldName, ((Number) field.get(o)).longValue());
+                    else if (isInt(field)) {
+                        primitiveFields.add(fieldName, ((Number) field.get(o)).longValue());
                     }
-                    if (isFloat(field)) {
-                        jsInnerObj.add(fieldName, ((Number) field.get(o)).doubleValue());
+                    else if (isFloat(field)) {
+                        primitiveFields.add(fieldName, ((Number) field.get(o)).doubleValue());
                     }
-                    if (isBoolean(field)) {
-                        jsInnerObj.add(fieldName, ((Boolean) field.get(o)).booleanValue());
+                    else if (isBoolean(field)) {
+                        primitiveFields.add(fieldName, (Boolean) field.get(o));
+                    }
+                    else {
+                        int fieldId = giver.getIDFor(field.get(o));
+                        if (fieldId > ID) {
+                            serializationQueue.add(field.get(o));
+                        }
+                        refFields.add(fieldName, fieldId);
                     }
                 } else {
-                    jsInnerObj.add(fieldName, JsonValue.NULL);
+                    primitiveFields.add(fieldName, JsonValue.NULL);
                 }
             }
-            jsObj.add("fields", jsInnerObj);
+            jsObj.add("fields", primitiveFields);
+            jsObj.add("ref", refFields);
         }
         JsonObjectBuilder finalString = Json.createObjectBuilder();
         finalString.add(ID.toString(),jsObj);
