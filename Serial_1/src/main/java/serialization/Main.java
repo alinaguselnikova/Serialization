@@ -3,24 +3,33 @@ package serialization;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import javax.json.Json;
+import javax.json.JsonArrayBuilder;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
 import java.lang.reflect.Field;
 import java.text.ParseException;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 
 
 public class Main {
     public static void main(String[] args) throws ClassNotFoundException, IllegalAccessException, JsonProcessingException, ParseException {
-        Example e = new Example("Aline", 0);
-        Example p = new Example("Don", 200);
-        e.setRelation(p);
-        p.setRelation(e);
+        Example e = new Example("Aline", 0, true);
+        Example p = new Example("Don", 200, false);
+//        e.setRelation(p);
+//        p.setRelation(e);
+//        System.out.println(startWorking(e));
+        ArrayList<Integer>  list = new ArrayList<>();
+        {
+            list.add(100);
+            list.add(200);
+        }
+
+        e.setArrayList(list);
+        p.setArrayList(list);
+//        System.out.println(serializeCollection(list))
         System.out.println(startWorking(e));
     }
+
 
     private static List<JsonValue> startWorking(Object o) throws IllegalAccessException {
         if ( o == null) {
@@ -55,20 +64,21 @@ public class Main {
                 field.setAccessible(true);
                 String fieldName = field.getName();
                 if (field.get(o) != null) {
-                    if (isString(field)) {
+                    Class <?> typeClazz = field.getType();
+                    if (field.get(o) instanceof Collection){
+                        serializeCollection((Collection<?>) field.get(o));
+                    }
+                     else if (isString(field.getType())) {
                         primitiveFields.add(fieldName, field.get(o).toString());
                     }
-                    else if (isInt(field)) {
+                    else if (isInt(field.getType())) {
                         primitiveFields.add(fieldName, ((Number) field.get(o)).longValue());
                     }
-                    else if (isFloat(field)) {
+                    else if (isFloat(field.getType())) {
                         primitiveFields.add(fieldName, ((Number) field.get(o)).doubleValue());
                     }
-                    else if (isBoolean(field)) {
+                    else if (isBoolean(field.getType())) {
                         primitiveFields.add(fieldName, (Boolean) field.get(o));
-                    }
-                    if (isBoolean(field)) {
-                        jsInnerObj.add(fieldName, (Boolean) field.get(o));
                     }
                     else {
                         int fieldId = giver.getIDFor(field.get(o));
@@ -76,7 +86,6 @@ public class Main {
                             serializationQueue.add(field.get(o));
                         }
                         refFields.add(fieldName, fieldId);
->>>>>>> 6ae3dc996ef9e592941c53b48751c90861d33e33
                     }
                 } else {
                     primitiveFields.add(fieldName, JsonValue.NULL);
@@ -92,27 +101,61 @@ public class Main {
         return finalString.build();
     }
 
-    private static boolean isString(Field field) throws IllegalAccessException {
-        return field.getType().equals(String.class) || field.getType().equals(char.class)
-                || field.getType().equals(Character.class);
+    private static JsonValue serializeCollection(Collection<?> o) throws IllegalAccessException {
+        if ( o == null) {
+            return JsonValue.NULL;
+        }
+        JsonObjectBuilder jsColl = Json.createObjectBuilder();
+        jsColl.add("ClassName", o.getClass().getName());
+        if(o.size() != 0) {
+            jsColl.add("genericType", o.iterator().next().getClass().getName());
+        }
+        else jsColl.add("genericType", JsonValue.NULL);
+
+        JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
+
+        for (Object element: o) {
+            if (element == null) {
+                    arrayBuilder.add(JsonValue.NULL);
+            }
+            String stringElement = element.toString();
+            if (isString(element.getClass())) {
+                arrayBuilder.add(element.toString());
+            } else if (isBoolean(element.getClass())) {
+                arrayBuilder.add(Boolean.valueOf((String) stringElement));
+            } else if (isInt(element.getClass())){
+                arrayBuilder.add(Long.valueOf((String) stringElement));
+            } else if (isFloat(element.getClass())){
+                arrayBuilder.add(Double.valueOf((String) stringElement));
+            }
+
+        }
+        jsColl.add("array", arrayBuilder);
+        return jsColl.build();
     }
 
-    private static boolean isInt(Field field) throws IllegalAccessException {
-        return field.getType().equals(int.class) || field.getType().equals(Integer.class)
-                || field.getType().equals(byte.class) || field.getType().equals(Byte.class)
-                || field.getType().equals(short.class) || field.getType().equals(Short.class)
-                || field.getType().equals(long.class) || field.getType().equals(Long.class);
+    private static boolean isString(Class <?> cls) throws IllegalAccessException {
+        return cls.equals(String.class) || cls.equals(char.class)
+                || cls.equals(Character.class);
+    }
+
+    private static boolean isInt(Class <?> cls) throws IllegalAccessException {
+        return cls.equals(int.class) || cls.equals(Integer.class)
+                || cls.equals(byte.class) || cls.equals(Byte.class)
+                || cls.equals(short.class) || cls.equals(Short.class)
+                || cls.equals(long.class) || cls.equals(Long.class);
 
     }
 
-    private static boolean isFloat(Field field) throws IllegalAccessException {
-        return field.getType().equals(double.class) || field.getType().equals(Double.class)
-                || field.getType().equals(float.class) || field.getType().equals(Float.class);
+    private static boolean isFloat(Class <?> cls) throws IllegalAccessException {
+        return cls.equals(double.class) || cls.equals(Double.class)
+                || cls.equals(float.class) || cls.equals(Float.class);
     }
 
-    private static boolean isBoolean(Field field) throws IllegalAccessException {
-        return field.getType().equals(boolean.class) || field.getType().equals(Boolean.class);
+    private static boolean isBoolean(Class <?> cls) throws IllegalAccessException {
+        return cls.equals(boolean.class) || cls.equals(Boolean.class);
     }
+
 }
 
 
@@ -127,6 +170,5 @@ public class Main {
 //////            out.println(value);
 ////        }
 //
-
 
 

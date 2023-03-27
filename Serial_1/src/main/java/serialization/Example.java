@@ -1,16 +1,25 @@
 package serialization;
 
+import java.util.ArrayList;
 import java.util.Objects;
 
 public class Example {
     private final String name;
     private final Integer age;
+    private final Boolean isTrue;
+
+    private ArrayList<Integer> list;
+
+
+
     private Example relation;
 
-    public Example(String name, Integer age) {
+    public Example(String name, Integer age, Boolean isTrue) {
         this.relation = null;
         this.age = age;
         this.name = name;
+        this.isTrue = isTrue;
+        this.list = null;
     }
 
     @Override
@@ -39,16 +48,13 @@ public class Example {
         return hashCode;
     }
 
-    public Example getRelation() {
-        return relation;
-    }
-
     public void setRelation(Example relation) {
         this.relation = relation;
     }
 
-    public Integer getAge() {
-        return age;
+    public void setArrayList(ArrayList<Integer> list){
+        this.list = list;
     }
+
 }
 
