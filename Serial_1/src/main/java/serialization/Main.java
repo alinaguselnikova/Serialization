@@ -1,22 +1,31 @@
+package serialization;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
+
 
 import javax.json.*;
 import java.lang.reflect.Field;
 import java.text.ParseException;
-import java.util.*;
-
 
 
 public class Main {
     public static void main(String[] args) throws ClassNotFoundException, IllegalAccessException, JsonProcessingException, ParseException {
         Example e = new Example();
-        // я хотела передавать и название класса функции, но оно не хочет так тоже работать(
-        JsonValue jsString = serializeObject(e);
-        System.out.println(jsString.toString());
+        System.out.println(startWorking(e));
 
     }
 
-    private static JsonValue serializeObject(Object o) throws IllegalAccessException {
+    private static JsonValue startWorking(Object o) throws IllegalAccessException {
+        if ( o == null) {
+            return null;
+        }
+        IdGiver IdExample = new IdGiver();
+        Integer currentId = IdExample.getIDFor(o);
+        JsonValue serializedObject = serializeObject(currentId, o);
+        return serializedObject;
+    }
+
+    private static JsonValue serializeObject(Integer ID, Object o) throws IllegalAccessException {
         if (o == null) {
             return JsonValue.NULL;
         }
@@ -49,7 +58,11 @@ public class Main {
             }
             jsObj.add("fields", jsInnerObj);
         }
-        return jsObj.build();
+        JsonObjectBuilder finalString = Json.createObjectBuilder();
+        finalString.add(ID.toString(),jsObj);
+
+
+        return finalString.build();
     }
 
     private static boolean isString(Field field) throws IllegalAccessException {

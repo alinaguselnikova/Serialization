@@ -1,3 +1,5 @@
+package serialization;
+
 public class Example {
     public Integer id;
     public Character firstName;
