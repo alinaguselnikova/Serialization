@@ -50,7 +50,7 @@ public class Main {
                         jsInnerObj.add(fieldName, ((Number) field.get(o)).doubleValue());
                     }
                     if (isBoolean(field)) {
-                        jsInnerObj.add(fieldName, ((Boolean) field.get(o)).booleanValue());
+                        jsInnerObj.add(fieldName, (Boolean) field.get(o));
                     }
                 } else {
                     jsInnerObj.add(fieldName, JsonValue.NULL);
