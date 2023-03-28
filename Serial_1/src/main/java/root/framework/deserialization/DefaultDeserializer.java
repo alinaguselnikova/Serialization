@@ -7,12 +7,9 @@ import javax.json.*;
 import java.beans.PropertyEditor;
 import java.beans.PropertyEditorManager;
 import java.io.StringReader;
-import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
 
 import static root.framework.serialization.util.Util.*;
 
@@ -34,24 +31,49 @@ public class DefaultDeserializer implements Deserializator {
         return stubs.get(0);
     }
 
-    public void deserializeObject(JsonObject deserialized, String id) throws IllegalAccessException {
-        JsonString classname = deserialized.getJsonString("className");
+    public Class<?> getClassFromString(JsonString className) {
         Class<?> cls;
         try {
-            cls = Class.forName(classname.getString());
+            cls = Class.forName(className.getString());
         } catch (ClassNotFoundException e) {
-            System.out.println("Can't deserialize, no such class: " + classname);
+            System.out.println("Can't deserialize, no such class: " + className);
             throw new RuntimeException(e);
         }
-        if (Collection.class.isAssignableFrom(cls)) {
-            return;
-        }
-        Object deserializedStub = Instantiator.instantiateClass(cls);
-        insertPrimitiveFields(deserializedStub, deserialized.getJsonObject("fields"), cls);
-        Map<String, Integer> referenceFieldsMap = getReferenceFieldsMap(deserialized.getJsonObject("ref"));
+        return cls;
+    }
 
-        referenceFields.put(Integer.parseInt(id), referenceFieldsMap);
-        stubs.put(Integer.parseInt(id), deserializedStub);
+    public void deserializeObject(JsonObject deserialized, String id) throws IllegalAccessException {
+        Class<?> cls = getClassFromString(deserialized.getJsonString("className"));
+        if (Collection.class.isAssignableFrom(cls)) {
+            deserializeCollection(cls, getClassFromString(deserialized.getJsonString("Argument Type")), deserialized.getJsonArray("array"), id);
+        } else {
+            Object deserializedStub = Instantiator.instantiateClass(cls);
+            insertPrimitiveFields(deserializedStub, deserialized.getJsonObject("fields"), cls);
+            Map<String, Integer> referenceFieldsMap = getReferenceFieldsMap(deserialized.getJsonObject("ref"));
+            referenceFields.put(Integer.parseInt(id), referenceFieldsMap);
+            stubs.put(Integer.parseInt(id), deserializedStub);
+        }
+    }
+
+    private void deserializeCollection(Class<?> cls, Class<?> objCls, JsonArray array, String id) {
+        Collection<Object> collection = (Collection<Object>) Instantiator.instantiateClass(cls);
+        if (collection == null) throw new RuntimeException();
+        if (isString(objCls) || isBoolean(objCls) || isInt(objCls) || isFloat(objCls)) {
+            for (Object o : array) {
+                collection.add(convert(objCls, (String)o));
+            }
+        } else {
+            for (JsonValue ref : array) {
+                JsonObject objRef = ref.asJsonObject();
+                JsonValue refid = objRef.get(objRef.keySet().stream().toList().get(0));
+                if (refid == null) {
+                    collection.add(null);
+                    continue;
+                }
+                collection.add(stubs.get(Integer.parseInt(refid.toString())));
+            }
+        }
+        stubs.put(Integer.parseInt(id), collection);
     }
 
     public void insertPrimitiveFields(Object stub, JsonObject fields, Class<?> clazz) throws IllegalAccessException {
@@ -101,10 +123,6 @@ public class DefaultDeserializer implements Deserializator {
             res.put(s, refFields.getJsonNumber(s).intValue());
         }
         return res;
-    }
-
-    private static Array deserializeArray(LinkedHashMap<String, Object> fieldsMap) {
-        return null;
     }
 
     private static Field getField(Class<?> cls, String fieldName) {
