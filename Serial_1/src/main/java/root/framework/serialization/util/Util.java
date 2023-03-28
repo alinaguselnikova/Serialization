@@ -1,4 +1,7 @@
-package root.serialization.util;
+package root.framework.serialization.util;
+
+import javax.json.JsonValue;
+import java.util.InputMismatchException;
 
 public class Util {
     public static boolean isString(Class <?> cls) {
@@ -37,5 +40,15 @@ public class Util {
 
     public static Boolean BooleanValue(String stringElement) {
         return Boolean.valueOf(stringElement);
+    }
+
+    public static Boolean valueToBoolean(JsonValue value) {
+        if (value.getValueType() == JsonValue.ValueType.FALSE) {
+            return false;
+        }
+        if (value.getValueType() == JsonValue.ValueType.TRUE) {
+            return true;
+        }
+        throw new InputMismatchException("Not boolean value for boolean argument");
     }
 }

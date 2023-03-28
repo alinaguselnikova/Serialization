@@ -1,4 +1,4 @@
-package root.templates;
+package root.framework.templates;
 
 public interface AdapterFactory {
     Serializator getSerializator();

@@ -11,6 +11,14 @@ public class Example {
     private ArrayList<Example> list;
     private Example relation;
 
+    public Example() {
+        name=null;
+        age=null;
+        isTrue=null;
+        list=null;
+        relation=null;
+    }
+
     public Example(String name, Integer age, Boolean isTrue) {
         this.relation = null;
         this.age = age;
