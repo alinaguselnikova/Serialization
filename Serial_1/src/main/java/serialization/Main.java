@@ -53,6 +53,9 @@ public class Main {
             return JsonValue.NULL;
         }
         Class<?> clazz = o.getClass();
+        if (Collection.class.isAssignableFrom(clazz)) {
+            return serializeCollection((Collection<?>) o, ID);
+        }
         String className = clazz.getName();
         Field[] fields = clazz.getDeclaredFields();
         JsonObjectBuilder jsObj = Json.createObjectBuilder();
@@ -64,11 +67,7 @@ public class Main {
                 field.setAccessible(true);
                 String fieldName = field.getName();
                 if (field.get(o) != null) {
-                    Class <?> typeClazz = field.getType();
-                    if (field.get(o) instanceof Collection){
-                        serializeCollection((Collection<?>) field.get(o));
-                    }
-                     else if (isString(field.getType())) {
+                    if (isString(field.getType())) {
                         primitiveFields.add(fieldName, field.get(o).toString());
                     }
                     else if (isInt(field.getType())) {
@@ -96,12 +95,10 @@ public class Main {
         }
         JsonObjectBuilder finalString = Json.createObjectBuilder();
         finalString.add(ID.toString(),jsObj);
-
-
         return finalString.build();
     }
 
-    private static JsonValue serializeCollection(Collection<?> o) throws IllegalAccessException {
+    private static JsonValue serializeCollection(Collection<?> o, Integer ID) throws IllegalAccessException {
         if ( o == null) {
             return JsonValue.NULL;
         }
@@ -131,7 +128,9 @@ public class Main {
 
         }
         jsColl.add("array", arrayBuilder);
-        return jsColl.build();
+        JsonObjectBuilder finalString = Json.createObjectBuilder();
+        finalString.add(ID.toString(), jsColl.build());
+        return finalString.build();
     }
 
     private static boolean isString(Class <?> cls) throws IllegalAccessException {

@@ -9,9 +9,6 @@ public class Example {
     private final Boolean isTrue;
 
     private ArrayList<Integer> list;
-
-
-
     private Example relation;
 
     public Example(String name, Integer age, Boolean isTrue) {
