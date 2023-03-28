@@ -1,7 +1,8 @@
-package root.serialization.defaults;
+package root.framework.defaults;
 
-import root.serialization.IdGiver;
-import root.templates.Serializator;
+
+import root.framework.templates.Serializator;
+import root.framework.util.IdGiver;
 
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
@@ -11,7 +12,7 @@ import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.Queue;
 
-import static root.serialization.util.Util.*;
+import static root.framework.util.Util.*;
 public class DefaultSerializator implements Serializator {
 
     private Queue<Object> serializationQueue;

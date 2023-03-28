@@ -1,4 +1,4 @@
-package root.framework.serialization.util;
+package root.framework.util;
 
 import javax.json.JsonValue;
 import java.util.InputMismatchException;

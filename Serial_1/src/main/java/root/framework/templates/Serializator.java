@@ -1,6 +1,6 @@
 package root.framework.templates;
 
-import root.framework.serialization.IdGiver;
+import root.framework.util.IdGiver;
 
 import javax.json.JsonValue;
 import java.util.Collection;
