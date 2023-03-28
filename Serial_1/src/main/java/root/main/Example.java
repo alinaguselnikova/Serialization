@@ -1,4 +1,4 @@
-package serialization;
+package root.main;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -33,7 +33,15 @@ public class Example {
         if (!Objects.equals(this.name, other.name)) {
             return false;
         }
-
+        if (!Objects.equals(this.isTrue, other.isTrue)) {
+            return false;
+        }
+        if (!Objects.equals(this.list, other.list)) {
+            return false;
+        }
+        if (!Objects.equals(this.relation, other.relation)) {
+            return false;
+        }
         return this.age.equals(other.age);
     }
 
@@ -42,6 +50,9 @@ public class Example {
         int hashCode = 1;
         hashCode = 31 * hashCode + name.hashCode();
         hashCode = 31 * hashCode + age;
+        hashCode = 31 * hashCode + isTrue.hashCode();
+        hashCode = 31 * hashCode + list.hashCode();
+        hashCode = 31 * hashCode + relation.hashCode();
         return hashCode;
     }
 

@@ -1,4 +1,4 @@
-package serialization;
+package root.serialization;
 
 import java.util.HashMap;
 
