@@ -1,7 +1,7 @@
-package root.serialization;
+package root.framework.serialization;
 
-import root.templates.AdapterFactory;
-import root.templates.Serializator;
+import root.framework.templates.AdapterFactory;
+import root.framework.templates.Serializator;
 
 import javax.json.Json;
 import javax.json.JsonObjectBuilder;

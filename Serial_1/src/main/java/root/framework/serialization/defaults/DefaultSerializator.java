@@ -1,7 +1,8 @@
-package root.serialization.defaults;
+package root.framework.serialization.defaults;
 
-import root.serialization.IdGiver;
-import root.templates.Serializator;
+import root.framework.serialization.IdGiver;
+import root.framework.templates.Serializator;
+import root.framework.serialization.util.Util;
 
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
@@ -11,7 +12,6 @@ import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.Queue;
 
-import static root.serialization.util.Util.*;
 public class DefaultSerializator implements Serializator {
 
     private Queue<Object> serializationQueue;
@@ -37,17 +37,17 @@ public class DefaultSerializator implements Serializator {
             String fieldName = field.getName();
             if (field.get(o) != null) {
                 String stringField = field.get(o).toString();
-                if (isString(field.getType())) {
+                if (Util.isString(field.getType())) {
                     primitiveFields.add(fieldName, stringField);
                 }
-                else if (isInt(field.getType())) {
-                    primitiveFields.add(fieldName, IntegerValue(stringField));
+                else if (Util.isInt(field.getType())) {
+                    primitiveFields.add(fieldName, Util.IntegerValue(stringField));
                 }
-                else if (isFloat(field.getType())) {
-                    primitiveFields.add(fieldName, (FloatValue(stringField)));
+                else if (Util.isFloat(field.getType())) {
+                    primitiveFields.add(fieldName, (Util.FloatValue(stringField)));
                 }
-                else if (isBoolean(field.getType())) {
-                    primitiveFields.add(fieldName, BooleanValue(stringField));
+                else if (Util.isBoolean(field.getType())) {
+                    primitiveFields.add(fieldName, Util.BooleanValue(stringField));
                 }
                 else {
                     int fieldId = giver.getIDFor(field.get(o));
@@ -86,14 +86,14 @@ public class DefaultSerializator implements Serializator {
                 continue;
             }
             String stringElement = element.toString();
-            if (isString(element.getClass())) {
+            if (Util.isString(element.getClass())) {
                 arrayBuilder.add(element.toString());
-            } else if (isBoolean(element.getClass())) {
-                arrayBuilder.add(BooleanValue(stringElement));
-            } else if (isInt(element.getClass())){
-                arrayBuilder.add(IntegerValue(stringElement));
-            } else if (isFloat(element.getClass())){
-                arrayBuilder.add(FloatValue(stringElement));
+            } else if (Util.isBoolean(element.getClass())) {
+                arrayBuilder.add(Util.BooleanValue(stringElement));
+            } else if (Util.isInt(element.getClass())){
+                arrayBuilder.add(Util.IntegerValue(stringElement));
+            } else if (Util.isFloat(element.getClass())){
+                arrayBuilder.add(Util.FloatValue(stringElement));
             } else {
                 int elementId = giver.getIDFor(element);
                 if(elementId > ID && !serializationQueue.contains(element)){

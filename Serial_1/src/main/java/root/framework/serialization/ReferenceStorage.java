@@ -1,4 +1,4 @@
-package root.serialization;
+package root.framework.serialization;
 
 import java.lang.reflect.Constructor;
 import java.util.HashMap;

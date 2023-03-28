@@ -11,6 +11,14 @@ public class Example {
     private ArrayList<Example> list;
     private Example relation;
 
+    public Example() {
+        name=null;
+        age=null;
+        isTrue=null;
+        list=null;
+        relation=null;
+    }
+
     public Example(String name, Integer age, Boolean isTrue) {
         this.relation = null;
         this.age = age;
@@ -51,8 +59,8 @@ public class Example {
         hashCode = 31 * hashCode + name.hashCode();
         hashCode = 31 * hashCode + age;
         hashCode = 31 * hashCode + isTrue.hashCode();
-        hashCode = 31 * hashCode + list.hashCode();
-        hashCode = 31 * hashCode + relation.hashCode();
+//        hashCode = 31 * hashCode + list.hashCode();
+//        hashCode = 31 * hashCode + relation.hashCode();
         return hashCode;
     }
 
