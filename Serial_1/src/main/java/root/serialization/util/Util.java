@@ -14,6 +14,10 @@ public class Util {
 
     }
 
+    public static boolean isLong(Class <?> cls) {
+         return cls.equals(long.class) || cls.equals(Long.class);
+    }
+
     public static boolean isFloat(Class <?> cls) {
         return cls.equals(double.class) || cls.equals(Double.class)
                 || cls.equals(float.class) || cls.equals(Float.class);

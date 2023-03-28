@@ -51,8 +51,8 @@ public class Example {
         hashCode = 31 * hashCode + name.hashCode();
         hashCode = 31 * hashCode + age;
         hashCode = 31 * hashCode + isTrue.hashCode();
-        hashCode = 31 * hashCode + list.hashCode();
-        hashCode = 31 * hashCode + relation.hashCode();
+//        hashCode = 31 * hashCode + list.hashCode();
+//        hashCode = 31 * hashCode + relation.hashCode();
         return hashCode;
     }
 

@@ -40,7 +40,7 @@ public class DefaultSerializator implements Serializator {
                 if (isString(field.getType())) {
                     primitiveFields.add(fieldName, stringField);
                 }
-                else if (isInt(field.getType())) {
+                else if (isInt(field.getType()) || isLong(field.getType())) {
                     primitiveFields.add(fieldName, IntegerValue(stringField));
                 }
                 else if (isFloat(field.getType())) {
@@ -71,7 +71,7 @@ public class DefaultSerializator implements Serializator {
             return JsonValue.NULL;
         }
         JsonObjectBuilder jsColl = Json.createObjectBuilder();
-        jsColl.add("ClassName", o.getClass().getName());
+        jsColl.add("className", o.getClass().getName());
         if(o.size() != 0) {
             jsColl.add("Argument Type", o.iterator().next().getClass().getName());
         }
