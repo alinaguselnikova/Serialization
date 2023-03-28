@@ -2,10 +2,7 @@ package serialization;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import javax.json.Json;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonObjectBuilder;
-import javax.json.JsonValue;
+import javax.json.*;
 import java.lang.reflect.Field;
 import java.text.ParseException;
 import java.util.*;
@@ -15,13 +12,13 @@ public class Main {
     public static void main(String[] args) throws ClassNotFoundException, IllegalAccessException, JsonProcessingException, ParseException {
         Example e = new Example("Aline", 0, true);
         Example p = new Example("Don", 200, false);
-//        e.setRelation(p);
-//        p.setRelation(e);
+        e.setRelation(p);
+        p.setRelation(e);
 //        System.out.println(startWorking(e));
-        ArrayList<Integer>  list = new ArrayList<>();
+        ArrayList<Example>  list = new ArrayList<>();
         {
-            list.add(100);
-            list.add(200);
+            list.add(e);
+            list.add(p);
         }
 
         e.setArrayList(list);
@@ -53,6 +50,9 @@ public class Main {
             return JsonValue.NULL;
         }
         Class<?> clazz = o.getClass();
+        if (Collection.class.isAssignableFrom(clazz)) {
+            return serializeCollection((Collection<?>) o, ID,  serializationQueue, giver);
+        }
         String className = clazz.getName();
         Field[] fields = clazz.getDeclaredFields();
         JsonObjectBuilder jsObj = Json.createObjectBuilder();
@@ -64,21 +64,18 @@ public class Main {
                 field.setAccessible(true);
                 String fieldName = field.getName();
                 if (field.get(o) != null) {
-                    Class <?> typeClazz = field.getType();
-                    if (field.get(o) instanceof Collection){
-                        serializeCollection((Collection<?>) field.get(o));
-                    }
-                     else if (isString(field.getType())) {
-                        primitiveFields.add(fieldName, field.get(o).toString());
+                     String stringField = field.get(o).toString();
+                    if (isString(field.getType())) {
+                        primitiveFields.add(fieldName, stringField);
                     }
                     else if (isInt(field.getType())) {
-                        primitiveFields.add(fieldName, ((Number) field.get(o)).longValue());
+                        primitiveFields.add(fieldName, IntegerValue(stringField));
                     }
                     else if (isFloat(field.getType())) {
-                        primitiveFields.add(fieldName, ((Number) field.get(o)).doubleValue());
+                        primitiveFields.add(fieldName, (FloatValue(stringField)));
                     }
                     else if (isBoolean(field.getType())) {
-                        primitiveFields.add(fieldName, (Boolean) field.get(o));
+                        primitiveFields.add(fieldName, BooleanValue(stringField));
                     }
                     else {
                         int fieldId = giver.getIDFor(field.get(o));
@@ -95,43 +92,51 @@ public class Main {
             jsObj.add("ref", refFields);
         }
         JsonObjectBuilder finalString = Json.createObjectBuilder();
-        finalString.add(ID.toString(),jsObj);
-
-
+        finalString.add(ID.toString(), jsObj);
         return finalString.build();
     }
 
-    private static JsonValue serializeCollection(Collection<?> o) throws IllegalAccessException {
+    private static JsonValue serializeCollection(Collection<?> o, Integer ID, Queue<Object> serializationQueue, IdGiver giver) throws IllegalAccessException {
         if ( o == null) {
             return JsonValue.NULL;
         }
         JsonObjectBuilder jsColl = Json.createObjectBuilder();
         jsColl.add("ClassName", o.getClass().getName());
         if(o.size() != 0) {
-            jsColl.add("genericType", o.iterator().next().getClass().getName());
+            jsColl.add("Argument Type", o.iterator().next().getClass().getName());
         }
-        else jsColl.add("genericType", JsonValue.NULL);
+        else jsColl.add("Argument Type", JsonValue.NULL);
 
         JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
+        JsonObjectBuilder refObj = Json.createObjectBuilder();
 
         for (Object element: o) {
             if (element == null) {
-                    arrayBuilder.add(JsonValue.NULL);
+                arrayBuilder.add(JsonValue.NULL);
             }
             String stringElement = element.toString();
             if (isString(element.getClass())) {
                 arrayBuilder.add(element.toString());
             } else if (isBoolean(element.getClass())) {
-                arrayBuilder.add(Boolean.valueOf((String) stringElement));
+                arrayBuilder.add(BooleanValue(stringElement));
             } else if (isInt(element.getClass())){
-                arrayBuilder.add(Long.valueOf((String) stringElement));
+                arrayBuilder.add(IntegerValue(stringElement));
             } else if (isFloat(element.getClass())){
-                arrayBuilder.add(Double.valueOf((String) stringElement));
+                arrayBuilder.add(FloatValue(stringElement));
+            } else {
+                int elementId = giver.getIDFor(element);
+//                if(!serializationQueue.contains(element)){
+                if (elementId > ID) {
+                    serializationQueue.add(element);
+                }
+                refObj.add(stringElement, elementId );
             }
-
+                arrayBuilder.add(refObj);
         }
         jsColl.add("array", arrayBuilder);
-        return jsColl.build();
+        JsonObjectBuilder finalString = Json.createObjectBuilder();
+        finalString.add(ID.toString(), jsColl.build());
+        return finalString.build();
     }
 
     private static boolean isString(Class <?> cls) throws IllegalAccessException {
@@ -156,6 +161,21 @@ public class Main {
         return cls.equals(boolean.class) || cls.equals(Boolean.class);
     }
 
+    private static Long IntegerValue(String stringElement) {
+        return Long.valueOf(stringElement);
+    }
+
+    private static Double FloatValue(String stringElement) {
+        return Double.valueOf(stringElement);
+    }
+
+    private static Boolean BooleanValue(String stringElement) {
+        return Boolean.valueOf(stringElement);
+    }
+
+
+
+
 }
 
 
@@ -170,5 +190,4 @@ public class Main {
 //////            out.println(value);
 ////        }
 //
-
 
