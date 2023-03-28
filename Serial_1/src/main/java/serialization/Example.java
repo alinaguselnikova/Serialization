@@ -8,7 +8,7 @@ public class Example {
     private final Integer age;
     private final Boolean isTrue;
 
-    private ArrayList<Integer> list;
+    private ArrayList<Example> list;
     private Example relation;
 
     public Example(String name, Integer age, Boolean isTrue) {
@@ -49,9 +49,8 @@ public class Example {
         this.relation = relation;
     }
 
-    public void setArrayList(ArrayList<Integer> list){
+    public void setArrayList(ArrayList<Example> list){
         this.list = list;
     }
 
 }
-
