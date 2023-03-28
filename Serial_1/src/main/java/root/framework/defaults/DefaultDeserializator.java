@@ -38,7 +38,6 @@ public class DefaultDeserializator implements Deserializator {
     }
 
     private void insertPrimitiveFields(Object stub, JsonObject fields, Class<?> clazz) throws IllegalAccessException {
-        System.out.println(fields);
         for (String name : fields.keySet()){
             Field objectField = getField(clazz, name);
             if (objectField != null) {
