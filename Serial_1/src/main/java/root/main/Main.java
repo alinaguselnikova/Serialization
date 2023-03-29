@@ -17,7 +17,7 @@ public class Main {
         p.setRelation(e);
         ArrayList<Example>  list = new ArrayList<>();
         {
-            list.add(p);
+            list.add(e);
             list.add(p);
         }
         e.setArrayList(list);
@@ -26,6 +26,7 @@ public class Main {
         DefaultAdapterFactory factory = new DefaultAdapterFactory();
         SerializationManager serializationManager = new SerializationManager(giver, factory);
         String json = serializationManager.serialize(e);
+        System.out.println(json);
         Object obj = serializationManager.deserialize(json);
         printObject(obj);
     }

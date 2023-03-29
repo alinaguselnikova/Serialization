@@ -3,10 +3,9 @@ package root.framework.defaults;
 import root.framework.templates.Deserializator;
 import root.framework.util.Instantiator;
 
-import javax.json.JsonNumber;
-import javax.json.JsonObject;
-import javax.json.JsonString;
-import javax.json.JsonValue;
+import javax.json.*;
+import java.beans.PropertyEditor;
+import java.beans.PropertyEditorManager;
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.HashMap;
@@ -27,14 +26,25 @@ public class DefaultDeserializator implements Deserializator {
             throw new RuntimeException(e);
         }
         if (Collection.class.isAssignableFrom(cls)) {
-            return;
+            JsonString argname = deserialized.getJsonString("Argument Type");
+            JsonArray array = deserialized.getJsonArray("array");
+            Class<?> argType;
+            try {
+                argType = Class.forName(argname.getString());
+            } catch (ClassNotFoundException e) {
+                System.out.println("Can't deserialize, no such class: " + classname);
+                throw new RuntimeException(e);
+            }
+            Map<String, Integer> refFieldsMap = deserializeCollection(cls,argType,array,id,stubs);
+            referenceFields.put(Integer.parseInt(id), refFieldsMap);
         }
-        Object deserializedStub = Instantiator.instantiateClass(cls);
-        insertPrimitiveFields(deserializedStub, deserialized.getJsonObject("fields"), cls);
-        Map<String, Integer> referenceFieldsMap = getReferenceFieldsMap(deserialized.getJsonObject("ref"));
-
-        referenceFields.put(Integer.parseInt(id), referenceFieldsMap);
-        stubs.put(Integer.parseInt(id), deserializedStub);
+        else {
+            Object deserializedStub = Instantiator.instantiateClass(cls);
+            insertPrimitiveFields(deserializedStub, deserialized.getJsonObject("fields"), cls);
+            Map<String, Integer> referenceFieldsMap = getReferenceFieldsMap(deserialized.getJsonObject("ref"));
+            referenceFields.put(Integer.parseInt(id), referenceFieldsMap);
+            stubs.put(Integer.parseInt(id), deserializedStub);
+        }
     }
 
     private void insertPrimitiveFields(Object stub, JsonObject fields, Class<?> clazz) throws IllegalAccessException {
@@ -67,7 +77,33 @@ public class DefaultDeserializator implements Deserializator {
         }
     }
 
+    private Map<String, Integer> deserializeCollection(Class<?> cls, Class<?> objCls, JsonArray array, String id, Map<Integer, Object> stubs) {
+        Collection<Object> collection = (Collection<Object>) Instantiator.instantiateClass(cls);
+        Map<String, Integer> res = new HashMap<>();
+        if (collection == null) throw new RuntimeException();
+        if (isString(objCls) || isBoolean(objCls) || isInt(objCls) || isFloat(objCls)) {
+            for (Object o : array) {
+                collection.add(convert(objCls, (String)o));
+            }
+        } else {
+            for (JsonValue ref : array) {
+                JsonObject objRef = ref.asJsonObject();
+                JsonNumber refid = objRef.getJsonNumber(objRef.keySet().stream().toList().get(0));
+                String name = (String) (objRef.keySet().toArray())[0];
+                res.put(name, refid.intValue());
+            }
+        }
+        stubs.put(Integer.parseInt(id), collection);
+        return res;
+    }
+
     public void restoreRefFields(Object target, Map<String, Integer> fields, Map<Integer, Object> stubs) throws IllegalAccessException {
+        if (Collection.class.isAssignableFrom(target.getClass())) {
+            Collection<Object> collection = (Collection<Object>) target;
+            for (Integer i : fields.values()) {
+                collection.add(stubs.get(i));
+            }
+        }
         for (String fieldName : fields.keySet()) {
             Field field = getField(target.getClass(), fieldName);
             if (field != null) {
@@ -94,12 +130,12 @@ public class DefaultDeserializator implements Deserializator {
         return null;
     }
 
-//    private static Object convert(Class<?> targetType, String text) {
-//        if (targetType.getName().equals("int")) {
-//            return Integer.parseInt(text);
-//        }
-//        PropertyEditor editor = PropertyEditorManager.findEditor(targetType);
-//        editor.setAsText(text);
-//        return editor.getValue();
-//    }
+    private static Object convert(Class<?> targetType, String text) {
+        if (targetType.getName().equals("int")) {
+            return Integer.parseInt(text);
+        }
+        PropertyEditor editor = PropertyEditorManager.findEditor(targetType);
+        editor.setAsText(text);
+        return editor.getValue();
+    }
 }

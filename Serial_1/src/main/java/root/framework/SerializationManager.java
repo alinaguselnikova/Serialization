@@ -52,7 +52,6 @@ public class SerializationManager {
             deserializator.deserializeObject(object.getJsonObject(s), s, referenceFields, stubs);
         }
         for (String s : object.keySet()) {
-            if (s.equals("1")) continue;
             Integer id = Integer.parseInt(s);
             deserializator.restoreRefFields(stubs.get(id), referenceFields.get(id), stubs);
         }
